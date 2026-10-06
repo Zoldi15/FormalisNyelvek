@@ -20,15 +20,11 @@ struct Route {
     string end;
 };
 
-int Lab1Problem::run(const cxxopts::ParseResult &args) {
-    string inputFilename = args["input"].as<string>();
-    string word = args["check"].as<string>();
-
+void checker(const string& inputFilename, const string& word) {
     ifstream inputFile(inputFilename);
 
     if (!inputFile) {
         cerr << "Error opening input file: " << inputFilename << endl;
-        return 1;
     }
 
     // States read
@@ -89,7 +85,6 @@ int Lab1Problem::run(const cxxopts::ParseResult &args) {
     for (char letter : word) {
         if (find(alphabet.begin(), alphabet.end(), letter) == alphabet.end()) {
             cout << "NEM";
-            return 0;
         }
 
         // Find route
@@ -103,15 +98,25 @@ int Lab1Problem::run(const cxxopts::ParseResult &args) {
             }
         }
 
-        if (!found) {
-            cout << "NEM";
-            return 0;
-        }
+        if (!found) cout << "NEM";
     }
 
 
     if (currentState == checkEnd) cout << "IGEN";
     else cout << "NEM";
+}
+
+int Lab1Problem::run(const cxxopts::ParseResult &args) {
+    string inputFilename = args["input"].as<string>();
+    string checkInput = args["check"].as<string>();
+
+    stringstream ss(checkInput);
+    string word;
+
+    while (getline(ss, word, ',')) {
+        checker(inputFilename, word);
+        cout<<endl;
+    }
 
     return 0;
 }
