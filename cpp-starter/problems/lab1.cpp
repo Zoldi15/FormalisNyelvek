@@ -10,7 +10,11 @@
 
 using namespace std;
 
-void Lab1Problem::initialize_parser(cxxopts::Options &options) {options.add_options()("check", "Word check", cxxopts::value<string>());}
+void Lab1Problem::initialize_parser(cxxopts::Options& options) {
+    options.add_options()
+        ("check", "Words to check",
+         cxxopts::value<string>());
+}
 
 bool Lab1Problem::is_chosen_problem(const cxxopts::ParseResult &args) {return args.count("check") > 0;}
 
