@@ -109,6 +109,7 @@ int Lab1Problem::run(const cxxopts::ParseResult &args) {
         }
     }
 
+
     if (currentState == checkEnd) cout << "IGEN";
     else cout << "NEM";
 
