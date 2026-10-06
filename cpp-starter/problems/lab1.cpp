@@ -24,7 +24,7 @@ struct Route {
     string end;
 };
 
-void checker(const string& inputFilename, const string& word) {
+void checker(const string& inputFilename, const string word) {
     ifstream inputFile(inputFilename);
 
     if (!inputFile) {
@@ -89,6 +89,7 @@ void checker(const string& inputFilename, const string& word) {
     for (char letter : word) {
         if (find(alphabet.begin(), alphabet.end(), letter) == alphabet.end()) {
             cout << "NEM";
+            return;
         }
 
         // Find route
@@ -102,7 +103,10 @@ void checker(const string& inputFilename, const string& word) {
             }
         }
 
-        if (!found) cout << "NEM";
+        if (!found) {
+            cout << "NEM";
+            return;
+        }
     }
 
 

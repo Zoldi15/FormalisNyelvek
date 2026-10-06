@@ -19,7 +19,6 @@ int runProblem(int argc, char* argv[]) {
     options.add_options()
         ("i,input", "Input file name", cxxopts::value<std::string>())
         ("o,output", "Output file name", cxxopts::value<std::string>())
-        ("c,check", "Check words", cxxopts::value<std::string>())
         ("h,help", "Print usage");
     
     for (Problem *p : problems) {
