@@ -12,11 +12,10 @@ using namespace std;
 
 void Lab1Problem::initialize_parser(cxxopts::Options& options) {
     options.add_options()
-        ("check", "Words to check",
-         cxxopts::value<string>());
+        ("check", "Words to check", cxxopts::value<string>());
 }
 
-bool Lab1Problem::is_chosen_problem(const cxxopts::ParseResult &args) {return args.count("check") > 0;}
+bool Lab1Problem::is_chosen_problem(const cxxopts::ParseResult& args) {return args.count("check") > 0;}
 
 struct Route {
     string start;
@@ -24,12 +23,10 @@ struct Route {
     string end;
 };
 
-void checker(const string& inputFilename, const string word) {
+void checker(const string& inputFilename, const string& word, ofstream& outputFile) {
     ifstream inputFile(inputFilename);
 
-    if (!inputFile) {
-        cerr << "Error opening input file: " << inputFilename << endl;
-    }
+    if (!inputFile) throw runtime_error("Error opening input file: " + inputFilename);
 
     // States read
     vector<string> states;
@@ -58,11 +55,11 @@ void checker(const string& inputFilename, const string word) {
         }
     }
 
-    // Start read
+    // Start state read
     string checkStart;
     getline(inputFile, checkStart);
 
-    // End read
+    // Final states read
     string checkEnd;
     getline(inputFile, checkEnd);
 
@@ -81,18 +78,16 @@ void checker(const string& inputFilename, const string word) {
     }
 
     inputFile.close();
-    // Input end
 
-    // Check
+    // Check word
     string currentState = checkStart;
 
     for (char letter : word) {
         if (find(alphabet.begin(), alphabet.end(), letter) == alphabet.end()) {
-            cout << "NEM";
+            outputFile << "NEM";
             return;
         }
 
-        // Find route
         bool found = false;
 
         for (const Route& route : routes[currentState]) {
@@ -104,27 +99,43 @@ void checker(const string& inputFilename, const string word) {
         }
 
         if (!found) {
-            cout << "NEM";
+            outputFile << "NEM";
             return;
         }
     }
 
+    // Check whether the final state is accepting
+    istringstream iss(checkEnd);
+    string finalState;
 
-    if (currentState == checkEnd) cout << "IGEN";
-    else cout << "NEM";
+    while (iss >> finalState) {
+        if (currentState == finalState) {
+            outputFile << "IGEN";
+            return;
+        }
+    }
+
+    outputFile << "NEM";
 }
 
-int Lab1Problem::run(const cxxopts::ParseResult &args) {
+int Lab1Problem::run(const cxxopts::ParseResult& args) {
     string inputFilename = args["input"].as<string>();
+    string outputFilename = args["output"].as<string>();
     string checkInput = args["check"].as<string>();
+
+    ofstream outputFile(outputFilename);
+
+    if (!outputFile) throw runtime_error("Error opening output file: " + outputFilename);
 
     stringstream ss(checkInput);
     string word;
 
     while (getline(ss, word, ',')) {
-        checker(inputFilename, word);
-        cout<<endl;
+        checker(inputFilename, word, outputFile);
+        outputFile << '\n';
     }
+
+    outputFile.close();
 
     return 0;
 }
