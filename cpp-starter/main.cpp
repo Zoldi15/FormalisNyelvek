@@ -5,6 +5,7 @@
 #include "cxxopts.hpp"
 
 // Add your own problems here
+#include "problems/hazi2.hpp"
 #include "problems/lab1.hpp"
 #include "problems/sum.hpp"
 
@@ -13,6 +14,7 @@ int runProblem(int argc, char* argv[]) {
     std::vector<Problem *> problems;
     problems.push_back(new SumProblem());
     problems.push_back(new Lab1Problem());
+    problems.push_back(new Hazi2Problem());
 
     cxxopts::Options options("project", "Run the specific problem");
 

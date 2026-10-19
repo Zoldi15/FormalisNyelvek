@@ -8,4 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add your own problems here
 add_executable(project main.cpp problems/sum.cpp
         problems/lab1.cpp
-        problems/lab1.hpp)
+        problems/lab1.hpp
+        problems/hazi2.cpp
+        problems/hazi2.hpp)
