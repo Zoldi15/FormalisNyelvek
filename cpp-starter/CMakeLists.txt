@@ -10,4 +10,6 @@ add_executable(project main.cpp problems/sum.cpp
         problems/lab1.cpp
         problems/lab1.hpp
         problems/hazi2.cpp
-        problems/hazi2.hpp)
+        problems/hazi2.hpp
+        problems/hazi3.cpp
+        problems/hazi3.hpp)
