@@ -21,7 +21,7 @@ using namespace std;
 // [7] message
 
 const regex logRegex(
-    R"(([0-9-]+ [0-9:.]+) +([0-9]+) +([0-9]+) ([IDVEFAW]) (.+?):(?: (.+))?)"
+    R"(([0-9-]+ [0-9:.]+) +([0-9]+) +([0-9]+) ([IDVEFAW]) +(.+?):(?: (.*))?)"
 );
 
 struct LogEntry {
@@ -36,7 +36,9 @@ struct LogEntry {
 bool parseLogLine(const string& line, LogEntry& entry) {
     smatch match;
 
-    if (!regex_search(line, match, logRegex))  return false;
+    if (!regex_search(line, match, logRegex)) {
+        return false;
+    }
 
     entry.datetime = match[2].str();
     entry.pid = match[3].str();
@@ -44,6 +46,14 @@ bool parseLogLine(const string& line, LogEntry& entry) {
     entry.level = match[5].str();
     entry.tag = match[6].str();
     entry.message = match[7].str();
+
+    // A tag eleji és végi szóközök eltávolítása
+    size_t first = entry.tag.find_first_not_of(" \t");
+    size_t last = entry.tag.find_last_not_of(" \t");
+
+    if (first == string::npos) entry.tag.clear();
+    else entry.tag = entry.tag.substr(first, last - first + 1);
+
 
     return true;
 }
@@ -60,6 +70,8 @@ bool Hazi4Problem::is_chosen_problem(const cxxopts::ParseResult& args) {
 int Hazi4Problem::run(const cxxopts::ParseResult& args) {
     int task = args["rgx"].as<int>();
 
+    if (task < 1 || task > 5) throw runtime_error("Invalid regex task number");
+
     string inputFilename = args["input"].as<string>();
     string outputFilename = args["output"].as<string>();
 
@@ -70,7 +82,6 @@ int Hazi4Problem::run(const cxxopts::ParseResult& args) {
     ofstream output(outputFilename);
 
     if (!output.is_open())  throw runtime_error("Cannot open output file: " + outputFilename);
-    if (task < 1 || task > 5) throw runtime_error("Invalid regex task number");
 
     vector<string> lines;
     string line;
