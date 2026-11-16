@@ -21,7 +21,7 @@ using namespace std;
 // [7] message
 
 const regex logRegex(
-    R"(([0-9-]+ [0-9:.]+) +([0-9]+) +([0-9]+) ([IDVEFAW]) +(.+?):(?: (.*))?)"
+    R"(([0-9-]+ [0-9:.]+) +([0-9]+) +([0-9]+) ([IDVEFAW]) (.+?):(?: (.+))?)"
 );
 
 struct LogEntry {
@@ -98,12 +98,19 @@ switch (task) {
         int count1 = 0, count2 = 0, count3 = 0, count4 = 0, count5 = 0, count6 = 0, count7 = 0, count8 = 0, count9 = 0, count10 = 0;
 
         regex dateRegex(R"(^10-15\s)");
+
         regex exactTimeRegex(R"(^10-15 10:18:51\.)");
+
         regex secondsRegex(R"(\b[0-9]{2}:[0-9]{2}:51\.)");
+
         regex lowMemoryRegex(R"(lowmemorykiller)");
+
         regex pid221Regex(R"(^10-15 10:18:51\.[0-9]+ +221 +)");
+
         regex javaPositionRegex(R"(\.java:)");
+
         regex threadRegex(R"(Thread)");
+
         regex exoPlayerRegex(R"(ExoPlayer)");
 
         for (const string& currentLine : lines) {
@@ -126,13 +133,11 @@ switch (task) {
                     count7++;
                 }
 
-                if (entry.level == "D" &&
-                    regex_search(entry.tag, exoPlayerRegex)) {
+                if (entry.level == "D" && regex_search(entry.tag, exoPlayerRegex)) {
                     count8++;
                 }
 
-                if ((entry.level == "E" || entry.level == "W") &&
-                    regex_search(currentLine, javaPositionRegex)) {
+                if ((entry.level == "E" || entry.level == "W") && regex_search(currentLine, javaPositionRegex)) {
                     count9++;
                 }
 
