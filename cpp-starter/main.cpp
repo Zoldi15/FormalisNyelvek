@@ -7,6 +7,7 @@
 // Add your own problems here
 #include "problems/hazi3.hpp"
 #include "problems/hazi2.hpp"
+#include "problems/hazi4.hpp"
 #include "problems/lab1.hpp"
 #include "problems/sum.hpp"
 
@@ -17,6 +18,7 @@ int runProblem(int argc, char* argv[]) {
     problems.push_back(new Lab1Problem());
     problems.push_back(new Hazi2Problem());
     problems.push_back(new Hazi3Problem());
+    problems.push_back(new Hazi4Problem());
 
     cxxopts::Options options("project", "Run the specific problem");
 

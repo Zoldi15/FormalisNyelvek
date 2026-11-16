@@ -12,4 +12,6 @@ add_executable(project main.cpp problems/sum.cpp
         problems/hazi2.cpp
         problems/hazi2.hpp
         problems/hazi3.cpp
-        problems/hazi3.hpp)
+        problems/hazi3.hpp
+        problems/hazi4.cpp
+        problems/hazi4.hpp)
