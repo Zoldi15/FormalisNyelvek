@@ -33,30 +33,28 @@ struct LogEntry {
     string message;
 };
 
+
 bool parseLogLine(const string& line, LogEntry& entry) {
     smatch match;
 
-    if (!regex_search(line, match, logRegex)) {
-        return false;
-    }
+    if (!regex_search(line, match, logRegex))  return false;
 
-    entry.datetime = match[2].str();
-    entry.pid = match[3].str();
-    entry.tid = match[4].str();
-    entry.level = match[5].str();
-    entry.tag = match[6].str();
-    entry.message = match[7].str();
+    entry.datetime = match[1].str();
+    entry.pid = match[2].str();
+    entry.tid = match[3].str();
+    entry.level = match[4].str();
+    entry.tag = match[5].str();
+    entry.message = match[6].str();
 
-    // A tag eleji és végi szóközök eltávolítása
     size_t first = entry.tag.find_first_not_of(" \t");
     size_t last = entry.tag.find_last_not_of(" \t");
 
     if (first == string::npos) entry.tag.clear();
     else entry.tag = entry.tag.substr(first, last - first + 1);
 
-
     return true;
 }
+
 
 void Hazi4Problem::initialize_parser(cxxopts::Options& options) {
     options.add_options()
