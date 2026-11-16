@@ -102,10 +102,10 @@ case 1: {
     regex exactTimeRegex(R"(^10-15 10:18:51\.)");
     regex secondsRegex(R"(\b[0-9]{2}:[0-9]{2}:51\.)");
     regex lowMemoryRegex(R"(lowmemorykiller)");
-    regex pid221Regex(R"(^[0-9-]+ 10:18:51\.[0-9]+\s+221\s+)");
+    regex pid221Regex(R"(^[0-9-]+\s+10:18:51\.[0-9]+\s+221\s+)");
     regex javaPositionRegex(R"(\.java:)");
     regex exoPlayerRegex(R"(ExoPlayer)");
-    regex threadRegex(R"(Thread)");
+    regex threadRegex(R"(\bThread\b)");
 
     for (const string& currentLine : lines) {
         LogEntry entry;
