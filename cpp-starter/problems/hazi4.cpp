@@ -93,70 +93,108 @@ int Hazi4Problem::run(const cxxopts::ParseResult& args) {
 
 switch (task) {
     case 1: {
-        int count1 = 0, count2 = 0, count3 = 0, count4 = 0, count5 = 0, count6 = 0, count7 = 0, count8 = 0, count9 = 0, count10 = 0;
+    int count1 = 0, count2 = 0, count3 = 0, count4 = 0, count5 = 0;
+    int count6 = 0, count7 = 0, count8 = 0, count9 = 0, count10 = 0;
 
-        regex dateRegex(R"(^10-15\s)");
-        regex exactTimeRegex(R"(^10-15 10:18:51\.)");
-        regex secondsRegex(R"(\b[0-9]{2}:[0-9]{2}:51\.)");
-        regex lowMemoryRegex(R"(lowmemorykiller)");
-        regex pid221Regex(R"(^10-15 10:18:51\.[0-9]+ +221 +)");
-        regex javaPositionRegex(R"(\.java:)");
-        regex threadRegex(R"(Thread)");
-        regex exoPlayerRegex(R"(ExoPlayer)");
+    regex dateRegex(R"(^10-15(?:\s|$))");
+    regex exactPidTimeRegex(R"(^[0-9-]+ 10:18:51(?:\.[0-9]+)?$)");
+    regex secondsRegex(R"(\b[0-9]{2}:[0-9]{2}:51(?:\.|\s|$))");
 
-        for (const string& currentLine : lines) {
-            LogEntry entry;
-            bool validLog = parseLogLine(currentLine, entry);
+    regex lowMemoryRegex(R"(lowmemorykiller)", regex_constants::icase);
+    regex pid221Regex(R"(^10-15 10:18:51(?:\.[0-9]+)?\s+221\s+)");
 
-            if (regex_search(currentLine, dateRegex)) count1++;
-            if (regex_search(currentLine, exactTimeRegex)) count2++;
-            if (regex_search(currentLine, secondsRegex)) count3++;
+    regex javaPositionRegex(R"(\.java:[0-9]+)");
+    regex exoPlayerRegex(R"(ExoPlayer)");
+    regex threadRegex(R"(Thread)");
 
-            if (validLog) {
-                if (regex_search(entry.tag, lowMemoryRegex)) count4++;
+    for (const string& currentLine : lines) {
+        LogEntry entry;
+        bool validLog = parseLogLine(currentLine, entry);
 
-                if (regex_search(currentLine, pid221Regex)) count5++;
+        // 1. Október 15-i sorok
+        if (regex_search(currentLine, dateRegex))
+            count1++;
 
-                if (entry.level == "E") count6++;
+        // 2. Október 15. 10:18:51-kor keletkezett sorok
+        if (regex_search(currentLine, exactPidTimeRegex))
+            count2++;
 
-                if (entry.level == "W" &&
-                    entry.tag == "PackageManager") {
-                    count7++;
-                }
+        // 3. Minden 51. másodpercben keletkezett sor
+        if (regex_search(currentLine, secondsRegex))
+            count3++;
 
-                if (entry.level == "D" && regex_search(entry.tag, exoPlayerRegex)) {
-                    count8++;
-                }
+        if (!validLog)
+            continue;
 
-                if ((entry.level == "E" || entry.level == "W") && regex_search(currentLine, javaPositionRegex)) {
-                    count9++;
-                }
+        // 4. lowmemorykiller taget tartalmazó sorok
+        if (regex_search(entry.tag, lowMemoryRegex))
+            count4++;
 
-                if (regex_search(entry.message, threadRegex)) count10++;
-            }
+        // 5. 10:18:51-kor keletkezett, 221-es PID-jű sorok
+        if (entry.pid == "221" && regex_match(entry.datetime, exactPidTimeRegex))
+            count5++;
+
+        // 6. Error (E) sorok
+        if (entry.level == "E")
+            count6++;
+
+        // 7. PackageManager warningok
+        if (entry.level == "W" &&
+            entry.tag == "PackageManager") {
+            count7++;
         }
 
-        output << count1 << '\n' << count2 << '\n' << count3 << '\n' << count4 << '\n' << count5 << '\n';
-        output << count6 << '\n' << count7 << '\n' << count8 << '\n' << count9 << '\n' << count10 << '\n';
+        // 8. ExoPlayer debug sorok
+        if (entry.level == "D" &&
+            regex_search(entry.tag, exoPlayerRegex)) {
+            count8++;
+        }
 
-        break;
+        // 9. Java fájlpozíciót tartalmazó error és warning sorok
+        if ((entry.level == "E" || entry.level == "W") &&
+            regex_search(currentLine, javaPositionRegex)) {
+            count9++;
+        }
+
+        // 10. Thread szó a message részben
+        if (regex_search(entry.message, threadRegex))
+            count10++;
+    }
+
+    output << count1 << '\n'
+           << count2 << '\n'
+           << count3 << '\n'
+           << count4 << '\n'
+           << count5 << '\n'
+           << count6 << '\n'
+           << count7 << '\n'
+           << count8 << '\n'
+           << count9 << '\n'
+           << count10 << '\n';
+
+    break;
     }
 
     case 2: {
-        regex javaFileRegex(R"(([A-Za-z0-9_$]+\.java):[0-9]+)");
+        regex javaFileRegex(R"(([A-Za-z_$][A-Za-z0-9_$]*\.java):[0-9]+)");
 
-        bool previousError = false;
+        bool insideErrorStackTrace = false;
 
         for (const string& currentLine : lines) {
             LogEntry entry;
 
+            // Ha új logcat sor következik, ellenőrizzük a szintjét.
             if (parseLogLine(currentLine, entry)) {
-                previousError = (entry.level == "E");
+                insideErrorStackTrace = (entry.level == "E");
                 continue;
             }
 
-            if (!previousError) continue;
+            // Csak az E sorokhoz tartozó stack trace-t dolgozzuk fel.
+            if (!insideErrorStackTrace)
+                continue;
 
+            // Az összes Java fájlnevet kigyűjtjük.
+            // Az ismétlődéseket is megtartjuk, eredeti sorrendben.
             sregex_iterator it(
                 currentLine.begin(),
                 currentLine.end(),
@@ -165,7 +203,9 @@ switch (task) {
 
             sregex_iterator end;
 
-            for (; it != end; ++it)  output << (*it)[1].str() << '\n';
+            for (; it != end; ++it) {
+                output << (*it)[1].str() << '\n';
+            }
         }
 
         break;
