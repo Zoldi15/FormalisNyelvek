@@ -98,64 +98,81 @@ case 1: {
     int count5 = 0, count6 = 0, count7 = 0, count8 = 0;
     int count9 = 0, count10 = 0;
 
-    regex dateRegex(R"(^10-15\s)");
-    regex exactTimeRegex(R"(^10-15 10:18:51\.)");
-    regex secondsRegex(R"(\b[0-9]{2}:[0-9]{2}:51\.)");
-    regex lowMemoryRegex(R"(lowmemorykiller)");
-    regex pid221Regex(R"(^[0-9-]+\s+10:18:51\.[0-9]+\s+221\s+)");
-    regex javaPositionRegex(R"(\.java:)");
-    regex exoPlayerRegex(R"(ExoPlayer)");
-    regex threadRegex(R"(\bThread\b)");
+    regex dateRegex(R"(^10-15)");
+    regex exactTimeRegex(R"(^10-15 10:18:51)");
+    regex secondsRegex(R"(^[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:51)");
+
+    regex lowMemoryRegex(
+        R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [IDVEFAW] +[^:]*lowmemorykiller[^:]*:)",
+        regex_constants::icase
+    );
+
+    regex pid221Regex(R"(^[0-9-]+ 10:18:51\.[0-9]+ +221 +)");
+
+    regex exoPlayerRegex(
+        R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ D .*ExoPlayer)"
+    );
+
+    regex packageManagerRegex(
+        R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ W +[^:]*PackageManager[^:]*:)",
+        regex_constants::icase
+    );
+
+    regex javaPositionRegex(
+        R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [EW] .*\.java:)"
+    );
+
+    regex threadRegex(
+        R"(^[0-9-]+ [0-9:.]+ +[0-9]+ +[0-9]+ [IDVEFAW] +[^:]+: .*Thread)"
+    );
 
     for (const string& currentLine : lines) {
         LogEntry entry;
 
         bool validLog = parseLogLine(currentLine, entry);
 
-        // 1. Október 15-i sorok
+        // 1. October 15 entries
         if (regex_search(currentLine, dateRegex))
             count1++;
 
-        // 2. Október 15. 10:18:51-kor keletkezett sorok
+        // 2. October 15 entries at 10:18:51
         if (regex_search(currentLine, exactTimeRegex))
             count2++;
 
-        // 3. 51 másodperckor keletkezett sorok
+        // 3. Entries occurring at second 51
         if (regex_search(currentLine, secondsRegex))
             count3++;
 
+        // Python regexes 4-10 operate on the complete log line.
         if (!validLog)
             continue;
 
-        // 4. lowmemorykiller tag
-        if (regex_search(entry.tag, lowMemoryRegex))
+        // 4. lowmemorykiller
+        if (regex_search(currentLine, lowMemoryRegex))
             count4++;
 
-        // 5. 10:18:51 és PID 221
+        // 5. 10:18:51 and PID 221
         if (regex_search(currentLine, pid221Regex))
             count5++;
 
-        // 6. Error sorok
+        // 6. Error entries
         if (entry.level == "E")
             count6++;
 
-        // 7. PackageManager warning
-        if (entry.level == "W" &&
-            entry.tag == "PackageManager")
+        // 7. PackageManager warnings
+        if (regex_search(currentLine, packageManagerRegex))
             count7++;
 
         // 8. ExoPlayer debug
-        if (entry.level == "D" &&
-            regex_search(entry.tag, exoPlayerRegex))
+        if (regex_search(currentLine, exoPlayerRegex))
             count8++;
 
-        // 9. Error és Warning, amely Java pozíciót tartalmaz
-        if ((entry.level == "E" || entry.level == "W") &&
-            regex_search(currentLine, javaPositionRegex))
+        // 9. Error and Warning entries containing Java positions
+        if (regex_search(currentLine, javaPositionRegex))
             count9++;
 
-        // 10. Thread a message részben
-        if (regex_search(entry.message, threadRegex))
+        // 10. Thread in the log message
+        if (regex_search(currentLine, threadRegex))
             count10++;
     }
 
